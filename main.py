@@ -112,9 +112,6 @@ def index():
 #display all blog posts
 @app.route('/blog', methods=['POST', 'GET'])
 def blog():
-    blog_id = request.args.get('id')
-    blogs = Blog.query.all()
-    user_id = request.args.get('user')
     # if blog_id is None:
     #     return render_template('blog.html', blogs=blogs)
     # else: 
@@ -125,13 +122,19 @@ def blog():
     # if user_id:
     #     blog = Blog.query.filter_by(owner_id=user_id)
     #     return render_template('singleUser.html')
-    if user_id:
-        blogs = Blog.query.filter_by(owner_id=user_id)
-        return render_template('singleUser.html', blogs=blogs, header="User Posts")
-    if blog_id:
-        blog = Blog.query.get(blog_id)
-        return render_template('selectedpost.html', blog=blog)
-    return render_template('blog.html', blogs=blogs, header="All Blog Posts")    
+    if request.method == 'GET':
+        blog_id = request.args.get('id')
+        blogs = Blog.query.all()
+        user_id = request.args.get('user')
+
+        if user_id:
+            blogs = Blog.query.filter_by(owner_id=user_id)
+            return render_template('singleUser.html', blogs=blogs, header="User Posts")
+        if blog_id:
+            blog = Blog.query.get(blog_id)
+            return render_template('selectedpost.html', blog=blog)
+        return render_template('blog.html', blogs=blogs, header="All Blog Posts")   
+    return redirect('/blog?user={}'.format(blogs.id)) 
 
 @app.route('/newpost', methods=['POST', 'GET'])
 def new_post():
