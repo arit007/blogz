@@ -37,6 +37,12 @@ def require_login():
     if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect('/login')
 
+@app.route('/logout')
+def logout():
+    del session['username']
+    flash('Logged Out')
+    return redirect('/blog')
+
 @app.route('/login', methods = ['POST', 'GET'])
 def login(): 
     if request.method == 'POST':
@@ -92,35 +98,41 @@ def signup():
 
     return render_template('signup.html')
 
+#display individual users
 @app.route('/', methods =['POST', 'GET'])
 def index():
-    owner = User.query.filter_by(username = session['username']).first()
-    if request.method == 'POST':
-        blog_name = request.form['blog']
-        new_blog = Blog(blog_name, owner)
-        db.session.add(new_blog)
-        db.session.commit()
-    #blogs = Blog.query.all()
-    blogs = Blog.query.filter_by(owner = owner).all()
-    return render_template('blog.html', blogs=blogs)    
-   
-@app.route('/logout')
-def logout():
-    del session['username']
-    return redirect('/blog')
+    user_id = request.args.get('id')
+    users = User.query.all()
+    if user_id is None:
+        return render_template('index.html', users=users)
+    else: 
+        user = User.query.get(user_id) 
+    return redirect('/blog?id={}'.format(user_id.id))
 
 #display all blog posts
 @app.route('/blog', methods=['POST', 'GET'])
 def blog():
     blog_id = request.args.get('id')
     blogs = Blog.query.all()
-    if blog_id is None:
-        return render_template('blog.html', blogs=blogs)
-    else: 
+    user_id = request.args.get('user')
+    # if blog_id is None:
+    #     return render_template('blog.html', blogs=blogs)
+    # else: 
         
-        blog = Blog.query.get(blog_id) #changed from blogs to blog
+    #     blog = Blog.query.get(blog_id)
+    #     return render_template('selectedpost.html', blog=blog)
+    
+    # if user_id:
+    #     blog = Blog.query.filter_by(owner_id=user_id)
+    #     return render_template('singleUser.html')
+    if user_id:
+        blogs = Blog.query.filter_by(owner_id=user_id)
+        return render_template('singleUser.html', blogs=blogs, header="User Posts")
+    if blog_id:
+        blog = Blog.query.get(blog_id)
         return render_template('selectedpost.html', blog=blog)
-   
+    return render_template('blog.html', blogs=blogs, header="All Blog Posts")    
+
 @app.route('/newpost', methods=['POST', 'GET'])
 def new_post():
     if request.method == 'POST':
@@ -130,16 +142,16 @@ def new_post():
         if not title:
             flash('Please dont leave post empty', 'error')
             return redirect('/newpost')
-        elif not body:
+        elif not body: 
             flash('Please dont leave post empty', 'error')
             return redirect('/newpost')    
         else:
-            #blog_name = request.form['blog']
             new_blog = Blog(title, body, owner)
             db.session.add(new_blog)
             db.session.commit()
         blogs = Blog.query.all()
-        return render_template('blog.html', blogs=blogs)   
+        #return render_template('blog.html', blogs=blogs) 
+        return redirect('/blog?id={}'.format(new_blog.id))  
     return render_template("newpost.html")    
  
 if __name__ == '__main__':
