@@ -11,13 +11,3 @@
 {% endfor %}
 
 {% endblock %}
-<ul>
-    {% for blog in blogs %}
-    <li>{{blog.name}}
-        <form method="POST" action="/blog" style="display:inline-block;">
-            <input type="string" name="blog-id" value="{{blog.id}}" />
-            <input type="submit" value="Done!" />
-        </form>
-    </li>
-    {% endfor %}
-</ul>
